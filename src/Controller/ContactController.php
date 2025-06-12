@@ -34,7 +34,7 @@ class ContactController extends AbstractController
             // Création de l'email
             $email = (new Email())
                 ->from($data['email'])
-                ->to('test@monmailtrap.com') // <- à remplacer par ton adresse Mailtrap
+                ->to(' julesfouquetprowd@gmail.com') // <- à remplacer par ton adresse Mailtrap
                 ->subject('Nouveau message de contact')
                 ->text(
                     "Nom: " . $data['name'] . "\n" .
