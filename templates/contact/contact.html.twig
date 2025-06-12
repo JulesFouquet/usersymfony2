@@ -6,16 +6,14 @@
 {% block body %}
 	<h1>Formulaire de contact</h1>
 
-	{# Affiche les messages flash #}
 	{% for message in app.flashes('success') %}
-		<div class="alert alert-success">
-			{{ message }}
-		</div>
+		<div class="alert alert-success">{{ message }}</div>
 	{% endfor %}
 
 	{{ form_start(form) }}
+	{{ form_row(form.name) }}
 	{{ form_row(form.email) }}
-
-	<button class="btn btn-primary">Envoyer</button>
+	{{ form_row(form.message) }}
+	{{ form_row(form.submit) }}
 	{{ form_end(form) }}
 {% endblock %}
