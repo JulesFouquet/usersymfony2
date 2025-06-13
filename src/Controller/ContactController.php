@@ -38,7 +38,7 @@ class ContactController extends AbstractController
                 ->to($address)
                 ->subject('Test Symfony Mailer!')
                 ->text('Envoi en utilisant Symfony Mailer')
-                ->htmlTemplate('emails\test.html.twig')
+                ->htmlTemplate('emails/test.html.twig')
                 ->context([
 	            'username' => $username
                 ]);
