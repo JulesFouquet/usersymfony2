@@ -2,54 +2,55 @@
 
 namespace App\Controller;
 
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use DateTimeImmutable;
+use App\Entity\Contact;
+use App\Form\ContactType;
+use Symfony\Component\Mime\Email;
+use App\Repository\ContactRepository;
+use Symfony\Bridge\Twig\Mime\TemplatedEmail;
+use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\Mailer\MailerInterface;
-use Symfony\Component\Mime\Email;
-use Symfony\Component\Form\Extension\Core\Type\TextType;
-use Symfony\Component\Form\Extension\Core\Type\EmailType;
-use Symfony\Component\Form\Extension\Core\Type\TextareaType;
-use Symfony\Component\Form\Extension\Core\Type\SubmitType;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
+
+
+#[Route('/contact')]
 class ContactController extends AbstractController
 {
-    #[Route('/contact', name: 'contact')]
-    public function contact(Request $request, MailerInterface $mailer): Response
-    {
-        // Crée un formulaire simple
-        $form = $this->createFormBuilder()
-            ->add('name', TextType::class, ['label' => 'Nom'])
-            ->add('email', EmailType::class, ['label' => 'Email'])
-            ->add('message', TextareaType::class, ['label' => 'Message'])
-            ->add('submit', SubmitType::class, ['label' => 'Envoyer'])
-            ->getForm();
+   #[Route('/new', name: 'app_contact_new', methods: ['GET', 'POST'])]
+   public function new(Request $request, ContactRepository $contactRepository, MailerInterface $mailer): Response
+   {
+       $contact = new Contact();
+       $form = $this->createForm(ContactType::class, $contact);
+       $form->handleRequest($request);
 
-        $form->handleRequest($request);
+          if ($form->isSubmitted() && $form->isValid()) {
 
-        if ($form->isSubmitted() && $form->isValid()) {
-            $data = $form->getData();
+            $contact->setCreatedAt(new DateTimeImmutable());
+            $contactRepository->save($contact, true);
+            $address = $contact->getEmail();
+            $username = $contact->getUsername();
 
-            // Création de l'email
-            $email = (new Email())
-                ->from($data['email'])
-                ->to(' julesfouquetprowd@gmail.com') // <- à remplacer par ton adresse Mailtrap
-                ->subject('Nouveau message de contact')
-                ->text(
-                    "Nom: " . $data['name'] . "\n" .
-                    "Email: " . $data['email'] . "\n\n" .
-                    "Message:\n" . $data['message']
-                );
+            $email = (new TemplatedEmail())
+                ->from('hello@example.com')
+                ->to($address)
+                ->subject('Test Symfony Mailer!')
+                ->text('Envoi en utilisant Symfony Mailer')
+                ->htmlTemplate('emails\test.html.twig')
+                ->context([
+	            'username' => $username
+                ]);
 
             $mailer->send($email);
 
-            $this->addFlash('success', 'Votre message a bien été envoyé !');
-            return $this->redirectToRoute('contact');
-        }
+           return $this->redirectToRoute('app_contact_index', [], Response::HTTP_SEE_OTHER);
+       }
 
-        return $this->render('contact/contact.html.twig', [
-            'form' => $form->createView(),
-        ]);
-    }
+       return $this->renderForm('contact/new.html.twig', [
+           'contact' => $contact,
+           'form' => $form,
+       ]);
+   }
 }
